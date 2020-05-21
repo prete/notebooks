@@ -57,10 +57,11 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
     libpixman-1-0 \ 
     fuse libfuse2 sshfs \
     libxkbcommon-x11-0 \
+    tmux \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Select the right versio of libblas to be used
+# Select the right version of libblas to be used
 # there was a problem running R in python and vice versa
 RUN pip install simplegeneric
 RUN update-alternatives --install /etc/alternatives/libblas.so.3-x86_64-linux-gnu libblas /usr/lib/x86_64-linux-gnu/blas/libblas.so.3 5
@@ -91,13 +92,13 @@ RUN jupyter serverextension enable --sys-prefix jupyter_server_proxy
 # https://askubuntu.com/questions/610449/w-gpg-error-the-following-signatures-couldnt-be-verified-because-the-public-k
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
 # https://cran.r-project.org/bin/linux/ubuntu/README.html
-RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/" | sudo tee -a /etc/apt/sources.list
+RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/" | sudo tee -a /etc/apt/sources.list
 # https://launchpad.net/~marutter/+archive/ubuntu/c2d4u3.5
 RUN add-apt-repository ppa:marutter/c2d4u3.5
 # Install CRAN binaries from ubuntu
 RUN apt-get update && apt-get install -yq --no-install-recommends \
     r-base \
-    # r-cran-httpuv \
+    r-base-dev \
     && apt-get clean \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
     rm -rf /var/lib/apt/lists/*
@@ -119,7 +120,7 @@ RUN Rscript -e 'install.packages("hdf5r",configure.args="--with-hdf5=/usr/bin/h5
 # PYTHON PACKAGES
 
 # Install scanpy and other python packages
-RUN pip install scanpy python-igraph louvain bbknn rpy2 tzlocal scvelo leidenalg
+RUN pip install scanpy python-igraph louvain bbknn rpy2 tzlocal scvelo leidenalg 
 # Try to fix rpy2 problems
 # https://stackoverflow.com/questions/54904223/importing-rds-files-in-python-to-be-read-as-a-dataframe
 RUN pip install --upgrade rpy2 pandas
@@ -127,7 +128,7 @@ RUN pip install --upgrade rpy2 pandas
 RUN git clone https://github.com/brianhie/scanorama.git
 RUN cd scanorama/ && python setup.py install
 # necessary for creating user environments 
-RUN conda install --quiet --yes nb_conda_kernels
+RUN conda install --quiet --yes nb_conda_kernels ipykernel r-irkernel
 
 # JULIA PACKAGES
 
@@ -190,10 +191,10 @@ RUN julia -e 'import Pkg; Pkg.update()' && \
 USER root
 
 # Install Docker
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-RUN apt update
-RUN apt install -y docker-ce
+#RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+#RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+#RUN apt update
+#RUN apt install -y docker-ce
 # Fix docker in sanger internal network
 # https://ssg-confluence.internal.sanger.ac.uk/display/OPENSTACK/Commonly+encountered+errors
 RUN mkdir -p /etc/default/
