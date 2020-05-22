@@ -1,5 +1,5 @@
 # Distributed under the terms of the Modified BSD License.
-FROM jupyter/base-notebook
+FROM jupyter/datascience-notebook
 
 USER root
 
@@ -88,20 +88,20 @@ RUN jupyter serverextension enable --sys-prefix jupyter_server_proxy
 
 # R PACKAGES
 
-# R
-# https://askubuntu.com/questions/610449/w-gpg-error-the-following-signatures-couldnt-be-verified-because-the-public-k
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
-# https://cran.r-project.org/bin/linux/ubuntu/README.html
-RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/" | sudo tee -a /etc/apt/sources.list
-# https://launchpad.net/~marutter/+archive/ubuntu/c2d4u3.5
-RUN add-apt-repository ppa:marutter/c2d4u3.5
-# Install CRAN binaries from ubuntu
-RUN apt-get update && apt-get install -yq --no-install-recommends \
-    r-base \
-    r-base-dev \
-    && apt-get clean \
-    && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
-    rm -rf /var/lib/apt/lists/*
+# # # R
+# # # https://askubuntu.com/questions/610449/w-gpg-error-the-following-signatures-couldnt-be-verified-because-the-public-k
+# # RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+# # # https://cran.r-project.org/bin/linux/ubuntu/README.html
+# # RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/" | sudo tee -a /etc/apt/sources.list
+# # # https://launchpad.net/~marutter/+archive/ubuntu/c2d4u3.5
+# # RUN add-apt-repository ppa:marutter/c2d4u3.5
+# # # Install CRAN binaries from ubuntu
+# # RUN apt-get update && apt-get install -yq --no-install-recommends \
+# #     r-base \
+# #     r-base-dev \
+# #     && apt-get clean \
+# #     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
+# #     rm -rf /var/lib/apt/lists/*
 # Install hdf5r for Seurat
 RUN Rscript -e 'install.packages("hdf5r",configure.args="--with-hdf5=/usr/bin/h5cc")'
 # Install other CRAN
@@ -128,31 +128,31 @@ RUN pip install --upgrade rpy2 pandas
 RUN git clone https://github.com/brianhie/scanorama.git
 RUN cd scanorama/ && python setup.py install
 # necessary for creating user environments 
-RUN conda install --quiet --yes nb_conda_kernels ipykernel r-irkernel
+##RUN conda install --quiet --yes nb_conda_kernels ipykernel r-irkernel
 
 # JULIA PACKAGES
 
 # Julia dependencies
 # install Julia packages in /opt/julia instead of $HOME
-ENV JULIA_DEPOT_PATH=/opt/julia
-ENV JULIA_PKGDIR=/opt/julia
-ENV JULIA_VERSION=1.0.0
+# # ENV JULIA_DEPOT_PATH=/opt/julia
+# # ENV JULIA_PKGDIR=/opt/julia
+# # ENV JULIA_VERSION=1.0.0
 
-RUN mkdir /opt/julia-${JULIA_VERSION} && \
-    cd /tmp && \
-    wget -q https://julialang-s3.julialang.org/bin/linux/x64/`echo ${JULIA_VERSION} | cut -d. -f 1,2`/julia-${JULIA_VERSION}-linux-x86_64.tar.gz && \
-    echo "bea4570d7358016d8ed29d2c15787dbefaea3e746c570763e7ad6040f17831f3 *julia-${JULIA_VERSION}-linux-x86_64.tar.gz" | sha256sum -c - && \
-    tar xzf julia-${JULIA_VERSION}-linux-x86_64.tar.gz -C /opt/julia-${JULIA_VERSION} --strip-components=1 && \
-    rm /tmp/julia-${JULIA_VERSION}-linux-x86_64.tar.gz
-RUN ln -fs /opt/julia-*/bin/julia /usr/local/bin/julia
+# # RUN mkdir /opt/julia-${JULIA_VERSION} && \
+# #     cd /tmp && \
+# #     wget -q https://julialang-s3.julialang.org/bin/linux/x64/`echo ${JULIA_VERSION} | cut -d. -f 1,2`/julia-${JULIA_VERSION}-linux-x86_64.tar.gz && \
+# #     echo "bea4570d7358016d8ed29d2c15787dbefaea3e746c570763e7ad6040f17831f3 *julia-${JULIA_VERSION}-linux-x86_64.tar.gz" | sha256sum -c - && \
+# #     tar xzf julia-${JULIA_VERSION}-linux-x86_64.tar.gz -C /opt/julia-${JULIA_VERSION} --strip-components=1 && \
+# #     rm /tmp/julia-${JULIA_VERSION}-linux-x86_64.tar.gz
+# # RUN ln -fs /opt/julia-*/bin/julia /usr/local/bin/julia
 
-# Show Julia where conda libraries are \
-RUN mkdir /etc/julia && \
-    echo "push!(Libdl.DL_LOAD_PATH, \"$CONDA_DIR/lib\")" >> /etc/julia/juliarc.jl && \
-    # Create JULIA_PKGDIR \
-    mkdir $JULIA_PKGDIR && \
-    chown $NB_USER $JULIA_PKGDIR && \
-    fix-permissions $JULIA_PKGDIR
+# # # Show Julia where conda libraries are \
+# # RUN mkdir /etc/julia && \
+# #     echo "push!(Libdl.DL_LOAD_PATH, \"$CONDA_DIR/lib\")" >> /etc/julia/juliarc.jl && \
+# #     # Create JULIA_PKGDIR \
+# #     mkdir $JULIA_PKGDIR && \
+# #     chown $NB_USER $JULIA_PKGDIR && \
+# #     fix-permissions $JULIA_PKGDIR
 
 # Fix permissions
 RUN conda clean -tipsy && \
@@ -201,10 +201,10 @@ RUN mkdir -p /etc/default/
 RUN echo "DOCKER_OPTS=\"--dns 172.18.255.1 --dns 172.18.255.2 --bip=192.168.3.3/24 --mtu=1380\"" >> /etc/default/docker
 
 # move kernelspec out of home
-RUN mv $HOME/.local/share/jupyter/kernels/julia* $CONDA_DIR/share/jupyter/kernels/ && \
-    chmod -R go+rx $CONDA_DIR/share/jupyter && \
-    rm -rf $HOME/.local && \
-    fix-permissions $JULIA_PKGDIR $CONDA_DIR/share/jupyter
+# # RUN mv $HOME/.local/share/jupyter/kernels/julia* $CONDA_DIR/share/jupyter/kernels/ && \
+# #     chmod -R go+rx $CONDA_DIR/share/jupyter && \
+# #     rm -rf $HOME/.local && \
+# #     fix-permissions $JULIA_PKGDIR $CONDA_DIR/share/jupyter
 
 # MAKE DEFAULT USER SUDO
 
@@ -213,8 +213,8 @@ RUN sed -i -e "s/Defaults    requiretty.*/ #Defaults    requiretty/g" /etc/sudoe
 RUN echo "jovyan ALL= (ALL) NOPASSWD: ALL" >> /etc/sudoers.d/jovyan
 
 # copy template notebooks to the image
-COPY files/data /home/jovyan/data
-COPY files/notebooks /home/jovyan/notebooks
+# # COPY files/data /home/jovyan/data
+# # COPY files/notebooks /home/jovyan/notebooks
 
 # copy mount script
 COPY mount-farm /usr/local/bin/mount-farm
