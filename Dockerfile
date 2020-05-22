@@ -121,7 +121,7 @@ RUN Rscript -e 'install.packages("hdf5r",configure.args="--with-hdf5=/usr/bin/h5
 # PYTHON PACKAGES
 
 # Install scanpy and other python packages
-RUN pip install scanpy python-igraph louvain bbknn rpy2 tzlocal scvelo leidenalg ipykernel r-irkernel
+RUN pip install scanpy python-igraph louvain bbknn rpy2 tzlocal scvelo leidenalg ipykernel
 # Try to fix rpy2 problems
 # https://stackoverflow.com/questions/54904223/importing-rds-files-in-python-to-be-read-as-a-dataframe
 RUN pip install --upgrade rpy2 pandas
