@@ -99,7 +99,7 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD5
 # Install hdf5r for Seurat and IRkernel to run R code in jupyetr lab
 RUN Rscript -e "install.packages('hdf5r',configure.args='--with-hdf5=/usr/bin/h5cc')" && \
     Rscript -e "install.packages('IRkernel')" && \
-    Rscript -e "IRkernel::installspec(user = FALSE)"
+    Rscript -e "IRkernel::installspec()"
 
 # PYTHON
 # install mostly used packages
