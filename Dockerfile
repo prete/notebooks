@@ -76,8 +76,8 @@ ENV PATH="${PATH}:/usr/lib/rstudio-server/bin"
 ENV LD_LIBRARY_PATH="/usr/lib/R/lib:/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/amd64/server:/opt/conda/lib/R/lib"
 
 # Shiny Server
-SHINY_SERVER_VERSION=1.5.9.923
-RUN wget -q "https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-${SHINY_SERVER_VERSION}-amd64.deb" -O shiny-server-latest.deb && \
+RUN SHINY_SERVER_VERSION=1.5.9.923 && \
+    wget -q "https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-${SHINY_SERVER_VERSION}-amd64.deb" -O shiny-server-latest.deb && \
     dpkg -i shiny-server-latest.deb && \
     rm -f shiny-server-latest.deb
 
