@@ -61,36 +61,38 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
 
 # Select the right versio of libblas to be used
 # there was a problem running R in python and vice versa
-RUN pip install simplegeneric
-RUN update-alternatives --install /etc/alternatives/libblas.so.3-x86_64-linux-gnu libblas /usr/lib/x86_64-linux-gnu/blas/libblas.so.3 5
+RUN pip install --no-cache-dir simplegeneric &&\
+    update-alternatives --install /etc/alternatives/libblas.so.3-x86_64-linux-gnu libblas /usr/lib/x86_64-linux-gnu/blas/libblas.so.3 5
 
 # RStudio
 ENV RSTUDIO_PKG=rstudio-server-1.2.5019-amd64.deb
-RUN wget -q https://download2.rstudio.org/server/bionic/amd64/${RSTUDIO_PKG}
-RUN dpkg -i ${RSTUDIO_PKG}
-RUN rm ${RSTUDIO_PKG}
+RUN wget -q https://download2.rstudio.org/server/bionic/amd64/${RSTUDIO_PKG} && \
+    dpkg -i ${RSTUDIO_PKG} && \
+    rm ${RSTUDIO_PKG}
 # add RStudio to PATH
 ENV PATH="${PATH}:/usr/lib/rstudio-server/bin"
 ENV LD_LIBRARY_PATH="/usr/lib/R/lib:/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/amd64/server:/opt/conda/lib/R/lib"
 
 # Shiny Server
-RUN wget -q "https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.9.923-amd64.deb" -O shiny-server-latest.deb
-RUN dpkg -i shiny-server-latest.deb
-RUN rm -f shiny-server-latest.deb
+SHINY_SERVER_VERSION=1.5.9.923
+RUN wget -q "https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-${SHINY_SERVER_VERSION}-amd64.deb" -O shiny-server-latest.deb && \
+    dpkg -i shiny-server-latest.deb && \
+    rm -f shiny-server-latest.deb
 
 # jupyter-server-proxy extension and jupyter-rsession-procy (nbrsessionproxy)
-RUN pip install --no-cache-dir jupyter-server-proxy https://github.com/yuvipanda/nbrsessionproxy/archive/rserver-again.zip
-RUN jupyter serverextension enable --sys-prefix jupyter_server_proxy
+RUN pip install --no-cache-dir \
+        jupyter-server-proxy \
+        https://github.com/yuvipanda/nbrsessionproxy/archive/rserver-again.zip && \
+    jupyter serverextension enable --sys-prefix jupyter_server_proxy
 
 # R
 # https://cran.r-project.org/bin/linux/ubuntu/README.html
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
-RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/" | sudo tee -a /etc/apt/sources.list
-RUN add-apt-repository ppa:marutter/c2d4u
-# Install CRAN binaries from ubuntu
-RUN apt-get update && apt-get install -yq --no-install-recommends \
-    r-base \
-    r-base-dev \
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
+    echo "deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/" | sudo tee -a /etc/apt/sources.list && \
+    add-apt-repository ppa:marutter/c2d4u && \
+    apt-get update && apt-get install -yq --no-install-recommends \
+        r-base \
+        r-base-dev \
     && apt-get clean \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
     rm -rf /var/lib/apt/lists/*
@@ -101,7 +103,7 @@ RUN Rscript -e "install.packages('hdf5r',configure.args='--with-hdf5=/usr/bin/h5
 
 # PYTHON
 # install mostly used packages
-RUN pip --no-cache-dir install scanpy python-igraph louvain bbknn rpy2 tzlocal scvelo leidenalg ipykernel
+RUN pip --no-cache-dir install --upgrade scanpy python-igraph louvain bbknn rpy2 tzlocal scvelo leidenalg ipykernel
 # install scanorama
 RUN git clone https://github.com/brianhie/scanorama.git
 RUN cd scanorama/ && python setup.py install
@@ -118,11 +120,10 @@ RUN mkdir /opt/julia-${JULIA_VERSION} && \
     echo "$(cat julia-${JULIA_VERSION}.sha256 | grep linux-x86_64 | awk '{print $1}') *julia-${JULIA_VERSION}-linux-x86_64.tar.gz" | sha256sum --check --status && \
     tar xzf julia-${JULIA_VERSION}-linux-x86_64.tar.gz -C /opt/julia-${JULIA_VERSION} --strip-components=1 && \
     rm /tmp/julia-${JULIA_VERSION}.sha256 && \
-    rm /tmp/julia-${JULIA_VERSION}-linux-x86_64.tar.gz
-RUN ln -fs /opt/julia-*/bin/julia /usr/local/bin/julia
-
-# show Julia where conda libraries are \
-RUN mkdir /etc/julia && \
+    rm /tmp/julia-${JULIA_VERSION}-linux-x86_64.tar.gz && \
+    ln -fs /opt/julia-*/bin/julia /usr/local/bin/julia && \
+    # show Julia where conda libraries are \
+    mkdir /etc/julia && \
     echo "push!(Libdl.DL_LOAD_PATH, \"$CONDA_DIR/lib\")" >> /etc/julia/juliarc.jl && \
     mkdir $JULIA_PKGDIR && \
     chown $NB_USER $JULIA_PKGDIR && \
@@ -148,8 +149,8 @@ RUN mv $HOME/.local/share/jupyter/kernels/julia* $CONDA_DIR/share/jupyter/kernel
     fix-permissions $JULIA_PKGDIR $CONDA_DIR/share/jupyter
 
 # MAKE DEFAULT USER SUDO
-RUN sed -i -e "s/Defaults    requiretty.*/ #Defaults    requiretty/g" /etc/sudoers
-RUN echo "jovyan ALL= (ALL) NOPASSWD: ALL" >> /etc/sudoers.d/jovyan
+RUN sed -i -e "s/Defaults    requiretty.*/ #Defaults    requiretty/g" /etc/sudoers && \
+    echo "jovyan ALL= (ALL) NOPASSWD: ALL" >> /etc/sudoers.d/jovyan
 
 # MOUNT FARM SCRIPT
 COPY mount-farm /usr/local/bin/mount-farm
