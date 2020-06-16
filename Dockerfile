@@ -56,6 +56,8 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
     libpixman-1-0 \ 
     fuse libfuse2 sshfs \
     libxkbcommon-x11-0 \
+    htop \
+    tmux \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -103,10 +105,20 @@ RUN Rscript -e "install.packages('hdf5r',configure.args='--with-hdf5=/usr/bin/h5
 
 # PYTHON
 # install mostly used packages
-RUN pip --no-cache-dir install --upgrade scanpy python-igraph louvain bbknn rpy2 tzlocal scvelo leidenalg ipykernel
+RUN pip --no-cache-dir install --upgrade \
+        scanpy \
+        python-igraph \
+        louvain \
+        bbknn \
+        rpy2 \
+        tzlocal \
+        scvelo \
+        leidenalg \
+        ipykernel
 # install scanorama
-RUN git clone https://github.com/brianhie/scanorama.git
-RUN cd scanorama/ && python setup.py install
+RUN git clone https://github.com/brianhie/scanorama.git && \
+    cd scanorama/ && \
+    python setup.py install
 
 # JULIA
 ENV JULIA_VERSION=1.4.2
@@ -129,10 +141,11 @@ RUN mkdir /opt/julia-${JULIA_VERSION} && \
     chown $NB_USER $JULIA_PKGDIR && \
     fix-permissions $JULIA_PKGDIR
 
-# Fix permissions
+# fix permissions
 RUN conda clean -tipsy && \
+    conda clean --index-cache --tarballs --yes && \
     fix-permissions $CONDA_DIR && \
-    fix-permissions /home/$NB_USER
+    fix-permissions /home/$NB_USER && \
 
 USER $NB_UID
 
@@ -155,3 +168,6 @@ RUN sed -i -e "s/Defaults    requiretty.*/ #Defaults    requiretty/g" /etc/sudoe
 # MOUNT FARM SCRIPT
 COPY mount-farm /usr/local/bin/mount-farm
 RUN chmod +x /usr/local/bin/mount-farm
+
+# POSTSTART SCRIPT
+COPY poststart.sh /
