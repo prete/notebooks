@@ -78,10 +78,8 @@ RUN wget -q "https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.
 RUN dpkg -i shiny-server-latest.deb
 RUN rm -f shiny-server-latest.deb
 
-# jupyter-server-proxy extension
-RUN pip install jupyter-server-proxy
-# use yuvipanda verion of jupyter-rsession-procy (nbrsessionproxy)
-RUN pip install https://github.com/yuvipanda/nbrsessionproxy/archive/rserver-again.zip
+# jupyter-server-proxy extension and jupyter-rsession-procy (nbrsessionproxy)
+RUN pip install --no-cache-dir jupyter-server-proxy https://github.com/yuvipanda/nbrsessionproxy/archive/rserver-again.zip
 RUN jupyter serverextension enable --sys-prefix jupyter_server_proxy
 
 # R
@@ -103,21 +101,23 @@ RUN Rscript -e "install.packages('hdf5r',configure.args='--with-hdf5=/usr/bin/h5
 
 # PYTHON
 # install mostly used packages
-RUN pip install scanpy python-igraph louvain bbknn rpy2 tzlocal scvelo leidenalg ipykernel
+RUN pip --no-cache-dir install scanpy python-igraph louvain bbknn rpy2 tzlocal scvelo leidenalg ipykernel
 # install scanorama
 RUN git clone https://github.com/brianhie/scanorama.git
 RUN cd scanorama/ && python setup.py install
 
 # JULIA
-ENV JULIA_VERSION=1.0.0
+ENV JULIA_VERSION=1.4.2
 ENV JULIA_PKGDIR=/opt/julia
 # install Julia packages in /opt/julia instead of $HOME
 ENV JULIA_DEPOT_PATH=/opt/julia
 RUN mkdir /opt/julia-${JULIA_VERSION} && \
     cd /tmp && \
     wget -q https://julialang-s3.julialang.org/bin/linux/x64/`echo ${JULIA_VERSION} | cut -d. -f 1,2`/julia-${JULIA_VERSION}-linux-x86_64.tar.gz && \
-    echo "bea4570d7358016d8ed29d2c15787dbefaea3e746c570763e7ad6040f17831f3 *julia-${JULIA_VERSION}-linux-x86_64.tar.gz" | sha256sum -c - && \
+    wget -q https://julialang-s3.julialang.org/bin/checksums/julia-${JULIA_VERSION}.sha256 && \
+    echo "$(cat julia-${JULIA_VERSION}.sha256 | grep linux-x86_64 | awk '{print $1}') *julia-${JULIA_VERSION}-linux-x86_64.tar.gz" | sha256sum --check --status && \
     tar xzf julia-${JULIA_VERSION}-linux-x86_64.tar.gz -C /opt/julia-${JULIA_VERSION} --strip-components=1 && \
+    rm /tmp/julia-${JULIA_VERSION}.sha256 && \
     rm /tmp/julia-${JULIA_VERSION}-linux-x86_64.tar.gz
 RUN ln -fs /opt/julia-*/bin/julia /usr/local/bin/julia
 
