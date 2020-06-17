@@ -56,8 +56,8 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
     libpixman-1-0 \ 
     fuse libfuse2 sshfs \
     libxkbcommon-x11-0 \
-    htop \
     tmux \
+    htop \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -71,9 +71,9 @@ ENV RSTUDIO_PKG=rstudio-server-1.2.5019-amd64.deb
 RUN wget -q https://download2.rstudio.org/server/bionic/amd64/${RSTUDIO_PKG} && \
     dpkg -i ${RSTUDIO_PKG} && \
     rm ${RSTUDIO_PKG}
-# add RStudio to PATH
+# add RStudio to PATH and R and java and conda to LD_LIBRARY_PATH
 ENV PATH="${PATH}:/usr/lib/rstudio-server/bin"
-ENV LD_LIBRARY_PATH="/usr/lib/R/lib:/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/amd64/server:/opt/conda/lib/R/lib"
+ENV LD_LIBRARY_PATH="/usr/lib/R/lib:/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/jvm/default-java/lib/server:/opt/conda/lib/R/lib"
 
 # Shiny Server
 RUN SHINY_SERVER_VERSION=1.5.9.923 && \
@@ -100,9 +100,7 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD5
     rm -rf /var/lib/apt/lists/*
 # Install hdf5r for Seurat and IRkernel to run R code in jupyetr lab
 RUN Rscript -e "install.packages('hdf5r',configure.args='--with-hdf5=/usr/bin/h5cc')" && \
-    Rscript -e "install.packages('IRkernel')" && \
-    Rscript -e "install.packages('Seurat')" && \
-    Rscript -e "install.packages('shiny')"
+    Rscript -e "install.packages('IRkernel')"
 
 # PYTHON
 # install mostly used packages
@@ -122,7 +120,7 @@ RUN git clone https://github.com/brianhie/scanorama.git && \
     python setup.py install
 
 # JULIA
-ENV JULIA_VERSION=1.4.2
+ENV JULIA_VERSION=1.2.0
 ENV JULIA_PKGDIR=/opt/julia
 # install Julia packages in /opt/julia instead of $HOME
 ENV JULIA_DEPOT_PATH=/opt/julia
