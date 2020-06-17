@@ -142,9 +142,7 @@ RUN mkdir /opt/julia-${JULIA_VERSION} && \
     fix-permissions $JULIA_PKGDIR
 
 # fix permissions
-RUN conda clean -tipsy && \
-    conda build purge && \
-    fix-permissions $CONDA_DIR && \
+RUN fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER 
 
 USER $NB_UID
