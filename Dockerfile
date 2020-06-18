@@ -75,12 +75,6 @@ RUN wget -q https://download2.rstudio.org/server/bionic/amd64/${RSTUDIO_PKG} && 
 ENV PATH="${PATH}:/usr/lib/rstudio-server/bin"
 ENV LD_LIBRARY_PATH="/usr/lib/R/lib:/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/jvm/default-java/lib/server:/opt/conda/lib/R/lib"
 
-# Shiny Server
-RUN SHINY_SERVER_VERSION=1.5.9.923 && \
-    wget -q "https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-${SHINY_SERVER_VERSION}-amd64.deb" -O shiny-server-latest.deb && \
-    dpkg -i shiny-server-latest.deb && \
-    rm -f shiny-server-latest.deb
-
 # jupyter-server-proxy extension and jupyter-rsession-procy (nbrsessionproxy)
 RUN pip install --no-cache-dir \
         jupyter-server-proxy \
@@ -120,7 +114,7 @@ RUN git clone https://github.com/brianhie/scanorama.git && \
     python setup.py install
 
 # JULIA
-ENV JULIA_VERSION=1.2.0
+ENV JULIA_VERSION=1.4.2
 ENV JULIA_PKGDIR=/opt/julia
 # install Julia packages in /opt/julia instead of $HOME
 ENV JULIA_DEPOT_PATH=/opt/julia
