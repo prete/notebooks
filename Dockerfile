@@ -84,8 +84,8 @@ RUN pip install --no-cache-dir \
 # R
 # https://cran.r-project.org/bin/linux/ubuntu/README.html
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
-    echo "deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/" | sudo tee -a /etc/apt/sources.list && \
-    add-apt-repository ppa:marutter/c2d4u && \
+    echo "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -c | awk '{print $2}')-cran40/" | sudo tee -a /etc/apt/sources.list && \
+    add-apt-repository ppa:c2d4u.team/c2d4u4.0+ && \
     apt-get update && apt-get install -yq --no-install-recommends \
         r-base \
         r-base-dev \
