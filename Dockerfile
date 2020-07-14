@@ -107,7 +107,8 @@ RUN pip --no-cache-dir install --upgrade \
         tzlocal \
         scvelo \
         leidenalg \
-        ipykernel
+        ipykernel \
+        nbresuse
 # install scanorama
 RUN git clone https://github.com/brianhie/scanorama.git && \
     cd scanorama/ && \
