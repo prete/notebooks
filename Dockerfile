@@ -57,7 +57,6 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
     fuse libfuse2 sshfs \
     libxkbcommon-x11-0 \
     tmux \
-    htop \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -75,7 +74,7 @@ RUN wget -q https://download2.rstudio.org/server/bionic/amd64/${RSTUDIO_PKG} && 
 ENV PATH="${PATH}:/usr/lib/rstudio-server/bin"
 ENV LD_LIBRARY_PATH="/usr/lib/R/lib:/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/jvm/default-java/lib/server:/opt/conda/lib/R/lib"
 
-# jupyter-server-proxy extension and jupyter-rsession-procy (nbrsessionproxy)
+# jupyter-server-proxy extension and jupyter-rsession-proxy (nbrsessionproxy)
 RUN pip install --no-cache-dir \
         jupyter-server-proxy \
         https://github.com/yuvipanda/nbrsessionproxy/archive/rserver-again.zip && \
@@ -107,8 +106,9 @@ RUN pip --no-cache-dir install --upgrade \
         tzlocal \
         scvelo \
         leidenalg \
-        ipykernel \
-        nbresuse
+        ipykernel && \
+    conda install -c conda-forge nodejs ipywidgets xeus-python ptvsd && \
+    jupyter labextension install @jupyterlab/debugger
 # install scanorama
 RUN git clone https://github.com/brianhie/scanorama.git && \
     cd scanorama/ && \
