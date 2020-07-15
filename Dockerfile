@@ -107,8 +107,11 @@ RUN pip --no-cache-dir install --upgrade \
         scvelo \
         leidenalg \
         ipykernel && \
-    conda install -c conda-forge nodejs ipywidgets xeus-python ptvsd && \
-    jupyter labextension install @jupyterlab/debugger
+    conda install \
+        nodejs \ 
+        ipywidgets \
+        xeus-python \
+        ptvsd
 # install scanorama
 RUN git clone https://github.com/brianhie/scanorama.git && \
     cd scanorama/ && \
