@@ -5,59 +5,62 @@ USER root
 
 # GENERAL PACKAGES
 RUN apt-get update && apt-get install -yq --no-install-recommends \
-    python3-software-properties \
-    software-properties-common \
-    apt-utils \
-    gnupg2 \
-    fonts-dejavu \
-    tzdata \
-    gfortran \
-    curl \
-    less \
-    gcc \
-    g++ \
-    clang-6.0 \
-    openssh-client \
-    openssh-server \
-    cmake \
-    python-dev \
-    libgsl-dev \
-    libssl-dev \
-    libcurl4-openssl-dev \
-    libxml2 \
-    libxml2-dev \
-    libapparmor1 \
-    libedit2 \
-    libhdf5-dev \
-    libclang-dev \
-    lsb-release \
-    psmisc \
-    rsync \
-    vim \
-    default-jdk \
-    libbz2-dev \
-    libpcre3-dev \
-    liblzma-dev \
-    zlib1g-dev \
-    xz-utils \
-    liblapack-dev \
-    libopenblas-dev \
-    libigraph0-dev \
-    libreadline-dev \
-    libblas-dev \
-    libtiff5-dev \
-    fftw3-dev \
-    git \
-    texlive-xetex \
-    hdf5-tools \
-    libffi-dev \
-    gettext \
-    libpng-dev \
-    libpixman-1-0 \ 
-    fuse libfuse2 sshfs \
-    libxkbcommon-x11-0 \
-    tmux \
-    && apt-get clean && \
+        python3-software-properties \
+        software-properties-common \
+        apt-utils \
+        gnupg2 \
+        fonts-dejavu \
+        tzdata \
+        gfortran \
+        curl \
+        less \
+        gcc \
+        g++ \
+        clang-6.0 \
+        openssh-client \
+        openssh-server \
+        cmake \
+        python-dev \
+        libgsl-dev \
+        libssl-dev \
+        libcurl4-openssl-dev \
+        libxml2 \
+        libxml2-dev \
+        libapparmor1 \
+        libedit2 \
+        libhdf5-dev \
+        libclang-dev \
+        lsb-release \
+        psmisc \
+        rsync \
+        vim \
+        default-jdk \
+        libbz2-dev \
+        libpcre3-dev \
+        liblzma-dev \
+        zlib1g-dev \
+        xz-utils \
+        liblapack-dev \
+        libopenblas-dev \
+        libigraph0-dev \
+        libreadline-dev \
+        libblas-dev \
+        libtiff5-dev \
+        fftw3-dev \
+        git \
+        texlive-xetex \
+        hdf5-tools \
+        libffi-dev \
+        gettext \
+        libpng-dev \
+        libpixman-1-0 \ 
+        libxkbcommon-x11-0 \
+        tmux \
+        # sshfs dependencies
+        fuse libfuse2 sshfs \
+        # singularity dependencies
+         build-essential libssl-dev uuid-dev libgpgme11-dev squashfs-tools libseccomp-dev pkg-config cryptsetup && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Select the right versio of libblas to be used
@@ -150,9 +153,35 @@ RUN julia -e 'import Pkg; Pkg.update()' && \
     julia -e 'import Pkg; Pkg.add("IJulia")' && \
     julia -e 'using IJulia'
 
+# Create singulairty paths 
+RUN mkdir -p $HOME/.singularity/pull/ && \
+    mkdir -p $HOME/.singularity/tmp/
+ENV SINGULARITY_CACHEDIR=$HOME/.singularity/
+ENV SINGULARITY_TMPDIR=$HOME/.singularity/tmp/
+ENV SINGULARITY_LOCALCACHEDIR=$HOME/.singularity/tmp/
+ENV SINGULARITY_PULLFOLDER=$HOME/.singularity/pull/
+
 USER root
 
-# MOVE JULIA KERNELSPEC OUT OF HOME
+# Install GO
+RUN VERSION=1.14 OS=linux ARCH=amd64 && \
+    cd /tmp && wget https://dl.google.com/go/go$VERSION.$OS-$ARCH.tar.gz && \
+    tar -C /usr/local -xzf go$VERSION.$OS-$ARCH.tar.gz && \
+    rm go$VERSION.$OS-$ARCH.tar.gz
+ENV GOPATH=${HOME}/go
+ENV PATH=/usr/local/go/bin:${PATH}:${GOPATH}/bin
+
+# Install singularity
+RUN VERSION=3.6.0 && \
+    wget https://github.com/sylabs/singularity/releases/download/v${VERSION}/singularity-${VERSION}.tar.gz && \
+    tar -xzf singularity-${VERSION}.tar.gz && \
+    cd singularity && \
+    ./mconfig && \
+    make -C builddir && \
+    sudo make -C builddir install && \
+    cd .. && rm -rf singularity
+    
+# Move Julia kernelspec out of home user, otherwise it will be overwriten when the user volume get mounted
 RUN mv $HOME/.local/share/jupyter/kernels/julia* $CONDA_DIR/share/jupyter/kernels/ && \
     chmod -R go+rx $CONDA_DIR/share/jupyter && \
     rm -rf $HOME/.local && \
