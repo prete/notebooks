@@ -106,12 +106,14 @@ RUN pip --no-cache-dir install --upgrade \
         tzlocal \
         scvelo \
         leidenalg \
-        ipykernel && \
+        ipykernel \
+        jupyter-archive && \
     conda install \
         nodejs \ 
         ipywidgets \
         xeus-python \
-        ptvsd
+        ptvsd && \
+    jupyter lab build
 # install scanorama
 RUN git clone https://github.com/brianhie/scanorama.git && \
     cd scanorama/ && \
